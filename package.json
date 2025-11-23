@@ -1,6 +1,6 @@
 {
   "name": "nuxt-module-essentia",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Nuxt module for Essentia WASM integration",
   "type": "module",
   "main": "./dist/module.js",
@@ -34,7 +34,7 @@
     "vite": "^5.0.0"
   },
   "peerDependencies": {
-    "nuxt": "^3.0.0"
+    "nuxt": "^3.0.0 || ^4.0.0"
   },
   "repository": {
     "type": "git",
