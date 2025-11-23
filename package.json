@@ -38,12 +38,12 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/nikitakashin/nabite-front.git"
+    "url": "git+https://github.com/nikitakashin/nuxt-module-essentia.git"
   },
   "author": "",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/nikitakashin/nabite-front/issues"
+    "url": "https://github.com/nikitakashin/nuxt-module-essentia/issues"
   },
-  "homepage": "https://github.com/nikitakashin/nabite-front#readme"
+  "homepage": "https://github.com/nikitakashin/nuxt-module-essentia"
 }
