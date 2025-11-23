@@ -1,14 +1,13 @@
 # nuxt-module-essentia
 
 Nuxt модуль для интеграции Essentia.js WASM библиотеки анализа аудио.
+Работает на Nuxt 3 и 4
 
 ## Установка
 
 ```bash
 npm install nuxt-module-essentia
 ```
-
-## Использование
 
 ### Подключение модуля
 

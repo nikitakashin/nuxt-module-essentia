@@ -40,7 +40,28 @@
     "type": "git",
     "url": "git+https://github.com/nikitakashin/nuxt-module-essentia.git"
   },
-  "author": "",
+  "author": {
+    "name": "Kashin Nikita",
+    "url": "https://github.com/nikitakashin/",
+    "email": "dev@nkashin.ru"
+  },
+  "published": "11.2025",
+  "keywords": [
+    "nuxt",
+    "nuxt-module",
+    "essentia",
+    "essentia-wasm",
+    "audio-analysis",
+    "music-information-retrieval",
+    "wasm",
+    "web-audio",
+    "audio-processing",
+    "machine-learning",
+    "signal-processing",
+    "feature-extraction",
+    "nuxt3",
+    "nuxt4"
+  ],
   "license": "ISC",
   "bugs": {
     "url": "https://github.com/nikitakashin/nuxt-module-essentia/issues"
