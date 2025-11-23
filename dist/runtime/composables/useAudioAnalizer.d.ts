@@ -4,6 +4,9 @@ export declare const useAudioAnalizer: () => {
     keyBpmResults: Ref<{}, {}>;
     moodResults: Ref<{}, {}>;
     resetMoodResults: () => void;
+    essentia?: undefined;
+    essentiaAnalysis?: undefined;
+    featureExtractionWorker?: undefined;
 } | {
     getKeyMoodAndBpm: (file: File) => Promise<void>;
     keyBpmResults: Ref<{
@@ -35,4 +38,7 @@ export declare const useAudioAnalizer: () => {
         value: number;
     }[]>;
     resetMoodResults: () => void;
+    essentia: any;
+    essentiaAnalysis: undefined;
+    featureExtractionWorker: any;
 };
