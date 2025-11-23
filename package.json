@@ -1,0 +1,49 @@
+{
+  "name": "nuxt-module-essentia",
+  "version": "1.0.0",
+  "description": "Nuxt module for Essentia WASM integration",
+  "type": "module",
+  "main": "./dist/module.js",
+  "types": "./dist/module.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/module.js",
+      "types": "./dist/module.d.ts"
+    },
+    "./runtime": {
+      "import": "./src/runtime/index.ts",
+      "types": "./src/runtime/index.ts"
+    }
+  },
+  "files": [
+    "dist",
+    "src/runtime"
+  ],
+  "scripts": {
+    "build": "vite build && tsc --emitDeclarationOnly",
+    "dev": "vite build --watch",
+    "prepublishOnly": "npm run build"
+  },
+  "dependencies": {
+    "@nuxt/kit": "^3.0.0"
+  },
+  "devDependencies": {
+    "@nuxt/schema": "^3.0.0",
+    "nuxt": "^3.0.0",
+    "typescript": "^5.0.0",
+    "vite": "^5.0.0"
+  },
+  "peerDependencies": {
+    "nuxt": "^3.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/nikitakashin/nabite-front.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/nikitakashin/nabite-front/issues"
+  },
+  "homepage": "https://github.com/nikitakashin/nabite-front#readme"
+}
