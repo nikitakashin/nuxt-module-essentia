@@ -9,7 +9,7 @@ const extractor = new EssentiaModel.EssentiaTFInputExtractor(EssentiaWASM, "musi
 let modelStart = 0;
 
 let model;
-let modelURL = "/models/msd-musicnn-1/model.json";
+let modelURL = "../models/msd-musicnn-1/model.json";
 let modelLoaded = false;
 let modelReady = false;
 

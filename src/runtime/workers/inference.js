@@ -59,7 +59,6 @@ async function initTensorflowWASM() {
   if (defaultBackend != "wasm") {
     return;
     importScripts("./lib/tf-backend-wasm-3.5.0.js");
-    // importScripts('https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-backend-wasm/dist/tf-backend-wasm.js');
     tf.setBackend("wasm");
     tf.ready()
       .then(() => {

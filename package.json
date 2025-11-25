@@ -1,6 +1,6 @@
 {
   "name": "nuxt-module-essentia",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "Nuxt module for Essentia WASM integration",
   "type": "module",
   "main": "./dist/module.js",
