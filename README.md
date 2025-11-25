@@ -1,4 +1,5 @@
 # nuxt-module-essentia
+![NPM Downloads](https://img.shields.io/npm/dm/nuxt-module-essentia)
 
 Nuxt модуль для интеграции Essentia.js WASM библиотеки анализа аудио.
 Работает на Nuxt 3 и 4
