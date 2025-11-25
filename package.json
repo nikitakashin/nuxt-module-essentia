@@ -1,6 +1,6 @@
 {
   "name": "nuxt-module-essentia",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Nuxt module for Essentia WASM integration",
   "type": "module",
   "main": "./dist/module.js",
@@ -24,10 +24,8 @@
     "dev": "vite build --watch",
     "prepublishOnly": "npm run build"
   },
-  "dependencies": {
-    "@nuxt/kit": "^3.0.0"
-  },
   "devDependencies": {
+    "@nuxt/kit": "^3.0.0",
     "@nuxt/schema": "^3.0.0",
     "nuxt": "^3.0.0",
     "typescript": "^5.0.0",

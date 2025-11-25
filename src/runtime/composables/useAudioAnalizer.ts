@@ -1,4 +1,11 @@
 import { ref, type Ref } from "vue";
+import type { EssentiaJS, EssentiaVector, KeyData, BpmData } from "../types/essentia";
+
+export interface KeyBpmResult {
+  key: string;
+  scale: string;
+  bpm: number;
+}
 
 export const useAudioAnalizer = () => {
   if (!import.meta.client) {
@@ -48,7 +55,7 @@ export const useAudioAnalizer = () => {
     },
   ];
 
-  const keyBpmResults: Ref<{ key: string; bpm: number; scale: string } | null> = ref(null);
+  const keyBpmResults: Ref<KeyBpmResult | null> = ref(null);
 
   const moodResults = ref(DEFAULT_MOOD_VALUE);
 
@@ -60,21 +67,18 @@ export const useAudioAnalizer = () => {
   }
 
   const KEEP_PERCENTAGE = 0.15; // keep only 15% of audio file
-  let essentia: any = null;
-  // @ts-ignore
-  let essentiaAnalysis;
-  let featureExtractionWorker: any = null;
-  const modelNames = ["mood_happy", "mood_sad", "mood_relaxed", "mood_aggressive", "danceability"];
+  let essentia: EssentiaJS | null = null;
+  let essentiaAnalysis: { keyData: KeyData; bpm: number } | null = null;
+  let featureExtractionWorker: Worker | null = null;
 
   let basePath = "/essentia/";
   let inferenceWorker: Worker;
-  let inferenceStartTime = 0;
 
   if (import.meta.client) {
     // Загружаем конфиг асинхронно
-    // @ts-ignore
+    // @ts-expect-error - build-time generated module
     import("#build/essentia-config.mjs")
-      .then((module: any) => {
+      .then((module: { essentiaConfig: { publicAssetsPath: string } }) => {
         basePath = module.essentiaConfig.publicAssetsPath;
       })
       .catch(() => {
@@ -83,15 +87,12 @@ export const useAudioAnalizer = () => {
 
     createInferenceWorker();
     createFeatureExtractionWorker();
-  }
-  // @ts-ignore
-  if (import.meta.client) {
+
     // Загружаем essentia через глобальный window объект
     const script = document.createElement("script");
     script.src = `${basePath}essentia-wasm.web.js`;
     script.onload = () => {
-      // @ts-ignore
-      window.EssentiaWASM().then((wasmModule: any) => {
+      window.EssentiaWASM().then((wasmModule) => {
         essentia = new wasmModule.EssentiaJS(false);
         essentia.arrayToVector = wasmModule.arrayToVector;
       });
@@ -99,9 +100,10 @@ export const useAudioAnalizer = () => {
     document.head.appendChild(script);
   }
 
+
   function createInferenceWorker() {
     inferenceWorker = new Worker(`${basePath}workers/inference.js`);
-    inferenceWorker.onmessage = function listenToWorker(msg) {
+    inferenceWorker.onmessage = function listenToWorker(msg: MessageEvent<{ predictions?: Record<string, number> }>) {
       if (msg.data.predictions) {
         const preds = msg.data.predictions;
 
@@ -117,21 +119,17 @@ export const useAudioAnalizer = () => {
     featureExtractionWorker.postMessage({
       init: true,
     });
-    featureExtractionWorker.onmessage =
-      // @ts-ignore
-      function listenToFeatureExtractionWorker(msg) {
-        // feed to models
-        if (msg.data.embeddings) {
-          inferenceStartTime = Date.now();
-          // send features off to each of the models
-          inferenceWorker.postMessage({
-            embeddings: msg.data.embeddings,
-          });
-          // msg.data.embeddings = null;
-        }
-        // free worker resource until next audio is uploaded
-        // featureExtractionWorker.terminate();
-      };
+    featureExtractionWorker.onmessage = function listenToFeatureExtractionWorker(
+      msg: MessageEvent<{ embeddings?: Float32Array }>
+    ) {
+      // feed to models
+      if (msg.data.embeddings) {
+        // send features off to each of the models
+        inferenceWorker.postMessage({
+          embeddings: msg.data.embeddings,
+        });
+      }
+    };
   }
 
   function monomix(buffer: AudioBuffer) {
@@ -217,7 +215,7 @@ export const useAudioAnalizer = () => {
     return sorted.length % 2 === 0 ? (sorted[mid - 1] + sorted[mid]) / 2 : sorted[mid];
   }
 
-  function estimateTuningFrequency(vectorSignal: any, sampleRate = 16000) {
+  function estimateTuningFrequency(vectorSignal: EssentiaVector, sampleRate = 16000): number {
     // Параметры для pitch-экстракции
     const frameSize = 2048;
     const hopSize = 512;
@@ -225,6 +223,11 @@ export const useAudioAnalizer = () => {
     const maxFreq = 1500; // выше — уже не вокал/мелодия
     const confidenceThreshold = 0.7;
     const silenceThreshold = 0.001; // чувствительность к тишине
+
+    if (!essentia) {
+      console.warn("Essentia не инициализирована");
+      return 440;
+    }
 
     // ✅ Теперь 7 аргументов!
     const pitchResult = essentia.PitchYinFFT(
@@ -280,9 +283,14 @@ export const useAudioAnalizer = () => {
     }
   }
 
-  function computeKeyBPM(audioSignal: Float32Array) {
-    let vectorSignal = essentia.arrayToVector(audioSignal);
+  function computeKeyBPM(audioSignal: Float32Array): { keyData: KeyData; bpm: number } {
+    if (!essentia) {
+      throw new Error("Essentia not initialized");
+    }
 
+    const vectorSignal = essentia.arrayToVector(audioSignal);
+
+    // TODO: Доделать получение ноты A, пока принимаем что она равна 440гц
     // const estimatedA = estimateTuningFrequency(vectorSignal, 16000);
     // console.log("Оценка строя:", estimatedA.toFixed(2), "Гц"); // например: 439.12
 
@@ -303,7 +311,7 @@ export const useAudioAnalizer = () => {
       "cosine",
       "hann"
     );
-    const bpm = essentia.PercivalBpmEstimator(
+    const bpmData = essentia.PercivalBpmEstimator(
       vectorSignal,
       1024,
       2048,
@@ -312,11 +320,11 @@ export const useAudioAnalizer = () => {
       210,
       50,
       16000
-    ).bpm;
+    );
 
     return {
-      keyData: keyData,
-      bpm: bpm,
+      keyData,
+      bpm: bpmData.bpm,
     };
   }
 
@@ -329,13 +337,12 @@ export const useAudioAnalizer = () => {
         if (essentia) {
           essentiaAnalysis = computeKeyBPM(prepocessedAudio);
 
+          const bpmValue = essentiaAnalysis.bpm <= 69 ? essentiaAnalysis.bpm * 2 : essentiaAnalysis.bpm;
+          
           keyBpmResults.value = {
             key: essentiaAnalysis.keyData.key,
             scale: essentiaAnalysis.keyData.scale,
-            bpm: (essentiaAnalysis.bpm <= 69
-              ? essentiaAnalysis.bpm * 2
-              : essentiaAnalysis.bpm
-            ).toFixed(2),
+            bpm: parseFloat(bpmValue.toFixed(2)),
           };
         }
 
@@ -343,14 +350,14 @@ export const useAudioAnalizer = () => {
         let audioData = shortenAudio(prepocessedAudio, KEEP_PERCENTAGE, true); // <-- TRIMMED start/end
 
         // send for feature extraction
-        featureExtractionWorker.postMessage(
-          {
-            audio: audioData.buffer,
-          },
-          [audioData.buffer]
-        );
-        // @ts-ignore
-        audioData = null;
+        if (featureExtractionWorker) {
+          featureExtractionWorker.postMessage(
+            {
+              audio: audioData.buffer,
+            },
+            [audioData.buffer]
+          );
+        }
       });
     });
   }

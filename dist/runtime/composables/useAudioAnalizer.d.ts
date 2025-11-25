@@ -1,4 +1,9 @@
 import { type Ref } from "vue";
+export interface KeyBpmResult {
+    key: string;
+    scale: string;
+    bpm: number;
+}
 export declare const useAudioAnalizer: () => {
     getKeyMoodAndBpm: () => void;
     keyBpmResults: Ref<{}, {}>;
@@ -9,15 +14,7 @@ export declare const useAudioAnalizer: () => {
     featureExtractionWorker?: undefined;
 } | {
     getKeyMoodAndBpm: (file: File) => Promise<void>;
-    keyBpmResults: Ref<{
-        key: string;
-        bpm: number;
-        scale: string;
-    } | null, {
-        key: string;
-        bpm: number;
-        scale: string;
-    } | null>;
+    keyBpmResults: Ref<KeyBpmResult | null, KeyBpmResult | null>;
     moodResults: Ref<{
         color: string;
         icon: string;
@@ -38,7 +35,7 @@ export declare const useAudioAnalizer: () => {
         value: number;
     }[]>;
     resetMoodResults: () => void;
-    essentia: any;
-    essentiaAnalysis: undefined;
-    featureExtractionWorker: any;
+    essentia: null;
+    essentiaAnalysis: null;
+    featureExtractionWorker: null;
 };
