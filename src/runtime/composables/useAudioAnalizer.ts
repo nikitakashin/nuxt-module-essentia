@@ -1,5 +1,10 @@
 import { ref, type Ref } from "vue";
-import type { EssentiaJS, EssentiaVector, KeyData, BpmData } from "../types/essentia";
+import type {
+  EssentiaJS,
+  EssentiaVector,
+  KeyData,
+  BpmData,
+} from "../types/essentia";
 
 export interface KeyBpmResult {
   key: string;
@@ -7,7 +12,7 @@ export interface KeyBpmResult {
   bpm: number;
 }
 
-export const useAudioAnalizer = () => {
+export const useAudioAnalizer = (colors?: string[]) => {
   if (!import.meta.client) {
     return {
       getKeyMoodAndBpm: () => {},
@@ -17,37 +22,47 @@ export const useAudioAnalizer = () => {
     };
   }
 
+  const defaultColors = [
+    "light-blue-lighten-2",
+    "light-blue-lighten-1",
+    "light-blue-darken-1",
+    "light-blue-darken-2",
+    "light-blue-darken-3",
+  ];
+
+  const moodColors = colors && colors.length === 5 ? colors : defaultColors;
+
   const DEFAULT_MOOD_VALUE = [
     {
-      color: "light-blue-lighten-2",
-      icon: "💃",
+      color: moodColors[0],
+      icon: "�",
       title: "Танцевальный",
       key: "danceability",
       value: 0,
     },
     {
-      color: "light-blue-lighten-1",
-      icon: "😊",
+      color: moodColors[1],
+      icon: "�",
       title: "Радостный",
       key: "mood_happy",
       value: 0,
     },
     {
-      color: "light-blue-darken-1",
-      icon: "😢",
+      color: moodColors[2],
+      icon: "�",
       title: "Грустный",
       key: "mood_sad",
       value: 0,
     },
     {
-      color: "light-blue-darken-2",
+      color: moodColors[3],
       icon: "😌",
       title: "Расслабляющий",
       key: "mood_relaxed",
       value: 0,
     },
     {
-      color: "light-blue-darken-3",
+      color: moodColors[4],
       icon: "😤",
       title: "Агрессивный",
       key: "mood_aggressive",
@@ -100,10 +115,11 @@ export const useAudioAnalizer = () => {
     document.head.appendChild(script);
   }
 
-
   function createInferenceWorker() {
     inferenceWorker = new Worker(`${basePath}workers/inference.js`);
-    inferenceWorker.onmessage = function listenToWorker(msg: MessageEvent<{ predictions?: Record<string, number> }>) {
+    inferenceWorker.onmessage = function listenToWorker(
+      msg: MessageEvent<{ predictions?: Record<string, number> }>,
+    ) {
       if (msg.data.predictions) {
         const preds = msg.data.predictions;
 
@@ -115,21 +131,24 @@ export const useAudioAnalizer = () => {
   }
 
   function createFeatureExtractionWorker() {
-    featureExtractionWorker = new Worker(`${basePath}workers/featureExtraction.js`);
+    featureExtractionWorker = new Worker(
+      `${basePath}workers/featureExtraction.js`,
+    );
     featureExtractionWorker.postMessage({
       init: true,
     });
-    featureExtractionWorker.onmessage = function listenToFeatureExtractionWorker(
-      msg: MessageEvent<{ embeddings?: Float32Array }>
-    ) {
-      // feed to models
-      if (msg.data.embeddings) {
-        // send features off to each of the models
-        inferenceWorker.postMessage({
-          embeddings: msg.data.embeddings,
-        });
-      }
-    };
+    featureExtractionWorker.onmessage =
+      function listenToFeatureExtractionWorker(
+        msg: MessageEvent<{ embeddings?: Float32Array }>,
+      ) {
+        // feed to models
+        if (msg.data.embeddings) {
+          // send features off to each of the models
+          inferenceWorker.postMessage({
+            embeddings: msg.data.embeddings,
+          });
+        }
+      };
   }
 
   function monomix(buffer: AudioBuffer) {
@@ -159,7 +178,10 @@ export const useAudioAnalizer = () => {
 
     if (trim) {
       const discardSamples = Math.floor(0.1 * audioIn.length); // discard 10% on beginning and end
-      audioIn = audioIn.subarray(discardSamples, audioIn.length - discardSamples); // create new view of buffer without beginning and end
+      audioIn = audioIn.subarray(
+        discardSamples,
+        audioIn.length - discardSamples,
+      ); // create new view of buffer without beginning and end
     }
 
     const ratioSampleLength = Math.ceil(audioIn.length * keepRatio);
@@ -167,7 +189,9 @@ export const useAudioAnalizer = () => {
     const numPatchesToKeep = Math.ceil(ratioSampleLength / patchSampleLength);
 
     // space patchesToKeep evenly
-    const skipSize = Math.floor((audioIn.length - ratioSampleLength) / (numPatchesToKeep - 1));
+    const skipSize = Math.floor(
+      (audioIn.length - ratioSampleLength) / (numPatchesToKeep - 1),
+    );
 
     let audioOut = [];
     let startIndex = 0;
@@ -181,7 +205,11 @@ export const useAudioAnalizer = () => {
     return Float32Array.from(audioOut);
   }
 
-  function downsampleArray(audioIn: Float32Array, sampleRateIn: number, sampleRateOut: number) {
+  function downsampleArray(
+    audioIn: Float32Array,
+    sampleRateIn: number,
+    sampleRateOut: number,
+  ) {
     if (sampleRateOut === sampleRateIn) {
       return audioIn;
     }
@@ -195,7 +223,11 @@ export const useAudioAnalizer = () => {
       let nextOffsetAudioIn = Math.round((offsetResult + 1) * sampleRateRatio);
       let accum = 0,
         count = 0;
-      for (let i = offsetAudioIn; i < nextOffsetAudioIn && i < audioIn.length; i++) {
+      for (
+        let i = offsetAudioIn;
+        i < nextOffsetAudioIn && i < audioIn.length;
+        i++
+      ) {
         // @ts-ignore
         accum += audioIn[i];
         count++;
@@ -212,10 +244,15 @@ export const useAudioAnalizer = () => {
     if (arr.length === 0) return 0;
     const sorted = [...arr].sort((a, b) => a - b);
     const mid = Math.floor(sorted.length / 2);
-    return sorted.length % 2 === 0 ? (sorted[mid - 1] + sorted[mid]) / 2 : sorted[mid];
+    return sorted.length % 2 === 0
+      ? (sorted[mid - 1] + sorted[mid]) / 2
+      : sorted[mid];
   }
 
-  function estimateTuningFrequency(vectorSignal: EssentiaVector, sampleRate = 16000): number {
+  function estimateTuningFrequency(
+    vectorSignal: EssentiaVector,
+    sampleRate = 16000,
+  ): number {
     // Параметры для pitch-экстракции
     const frameSize = 2048;
     const hopSize = 512;
@@ -237,7 +274,7 @@ export const useAudioAnalizer = () => {
       hopSize,
       minFreq,
       maxFreq,
-      silenceThreshold
+      silenceThreshold,
     );
 
     const centsDeviations = [];
@@ -262,7 +299,9 @@ export const useAudioAnalizer = () => {
 
     // Если мало данных — возвращаем 440 по умолчанию
     if (centsDeviations.length < 10) {
-      console.warn("Недостаточно надёжных данных для оценки строя. Используется A=440.");
+      console.warn(
+        "Недостаточно надёжных данных для оценки строя. Используется A=440.",
+      );
       return 440;
     }
 
@@ -279,11 +318,16 @@ export const useAudioAnalizer = () => {
       // downmix to mono, and downsample to 16kHz sr for essentia tensorflow models
       return downsampleArray(mono, audioBuffer.sampleRate, 16000);
     } else {
-      throw new TypeError("Input to audio preprocessing is not of type AudioBuffer");
+      throw new TypeError(
+        "Input to audio preprocessing is not of type AudioBuffer",
+      );
     }
   }
 
-  function computeKeyBPM(audioSignal: Float32Array): { keyData: KeyData; bpm: number } {
+  function computeKeyBPM(audioSignal: Float32Array): {
+    keyData: KeyData;
+    bpm: number;
+  } {
     if (!essentia) {
       throw new Error("Essentia not initialized");
     }
@@ -309,7 +353,7 @@ export const useAudioAnalizer = () => {
       0.0001,
       440,
       "cosine",
-      "hann"
+      "hann",
     );
     const bpmData = essentia.PercivalBpmEstimator(
       vectorSignal,
@@ -319,7 +363,7 @@ export const useAudioAnalizer = () => {
       128,
       210,
       50,
-      16000
+      16000,
     );
 
     return {
@@ -330,35 +374,40 @@ export const useAudioAnalizer = () => {
 
   function processFile(arrayBuffer: ArrayBuffer) {
     audioCtx.resume().then(() => {
-      audioCtx.decodeAudioData(arrayBuffer).then(async function handleDecodedAudio(audioBuffer) {
-        const prepocessedAudio = preprocess(audioBuffer);
-        await audioCtx.suspend();
+      audioCtx
+        .decodeAudioData(arrayBuffer)
+        .then(async function handleDecodedAudio(audioBuffer) {
+          const prepocessedAudio = preprocess(audioBuffer);
+          await audioCtx.suspend();
 
-        if (essentia) {
-          essentiaAnalysis = computeKeyBPM(prepocessedAudio);
+          if (essentia) {
+            essentiaAnalysis = computeKeyBPM(prepocessedAudio);
 
-          const bpmValue = essentiaAnalysis.bpm <= 69 ? essentiaAnalysis.bpm * 2 : essentiaAnalysis.bpm;
-          
-          keyBpmResults.value = {
-            key: essentiaAnalysis.keyData.key,
-            scale: essentiaAnalysis.keyData.scale,
-            bpm: parseFloat(bpmValue.toFixed(2)),
-          };
-        }
+            const bpmValue =
+              essentiaAnalysis.bpm <= 69
+                ? essentiaAnalysis.bpm * 2
+                : essentiaAnalysis.bpm;
 
-        // reduce amount of audio to analyse
-        let audioData = shortenAudio(prepocessedAudio, KEEP_PERCENTAGE, true); // <-- TRIMMED start/end
+            keyBpmResults.value = {
+              key: essentiaAnalysis.keyData.key,
+              scale: essentiaAnalysis.keyData.scale,
+              bpm: parseFloat(bpmValue.toFixed(2)),
+            };
+          }
 
-        // send for feature extraction
-        if (featureExtractionWorker) {
-          featureExtractionWorker.postMessage(
-            {
-              audio: audioData.buffer,
-            },
-            [audioData.buffer]
-          );
-        }
-      });
+          // reduce amount of audio to analyse
+          let audioData = shortenAudio(prepocessedAudio, KEEP_PERCENTAGE, true); // <-- TRIMMED start/end
+
+          // send for feature extraction
+          if (featureExtractionWorker) {
+            featureExtractionWorker.postMessage(
+              {
+                audio: audioData.buffer,
+              },
+              [audioData.buffer],
+            );
+          }
+        });
     });
   }
 
@@ -381,6 +430,6 @@ export const useAudioAnalizer = () => {
     resetMoodResults,
     essentia,
     essentiaAnalysis,
-    featureExtractionWorker
+    featureExtractionWorker,
   };
 };
