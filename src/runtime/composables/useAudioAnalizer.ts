@@ -35,21 +35,21 @@ export const useAudioAnalizer = (colors?: string[]) => {
   const DEFAULT_MOOD_VALUE = [
     {
       color: moodColors[0],
-      icon: "�",
+      icon: "💃",
       title: "Танцевальный",
       key: "danceability",
       value: 0,
     },
     {
       color: moodColors[1],
-      icon: "�",
+      icon: "😊",
       title: "Радостный",
       key: "mood_happy",
       value: 0,
     },
     {
       color: moodColors[2],
-      icon: "�",
+      icon: "😢",
       title: "Грустный",
       key: "mood_sad",
       value: 0,

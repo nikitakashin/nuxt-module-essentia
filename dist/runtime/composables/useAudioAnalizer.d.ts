@@ -4,7 +4,7 @@ export interface KeyBpmResult {
     scale: string;
     bpm: number;
 }
-export declare const useAudioAnalizer: () => {
+export declare const useAudioAnalizer: (colors?: string[]) => {
     getKeyMoodAndBpm: () => void;
     keyBpmResults: Ref<{}, {}>;
     moodResults: Ref<{}, {}>;
